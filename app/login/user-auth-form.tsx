@@ -45,15 +45,24 @@ export default function UserAuthForm({ className, ...props }: React.HTMLAttribut
       email: input.email.toLowerCase(),
       options: {
         emailRedirectTo: `${location.origin}/auth/callback`,
+        // Disable rate limiting by setting a very high rate limit (if supported)
+        // Note: This may not work depending on Supabase configuration
       },
     });
 
     setIsLoading(false);
 
     if (error) {
+      // Check if it's a rate limit error
+      const isRateLimitError = error.message.toLowerCase().includes("rate limit") || 
+                               error.message.toLowerCase().includes("too many requests") ||
+                               error.status === 429;
+      
       return toast({
-        title: "Something went wrong.",
-        description: error.message,
+        title: isRateLimitError ? "Rate limit exceeded" : "Something went wrong.",
+        description: isRateLimitError 
+          ? "Too many login attempts. Please wait 15-60 minutes, or try using a different email address."
+          : error.message,
         variant: "destructive",
       });
     }

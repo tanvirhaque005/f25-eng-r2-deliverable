@@ -16,9 +16,43 @@ export default function SpeciesChatbot() {
     }
   };
 
-const handleSubmit = async () => {
-  // TODO: Implement this function
-}
+  const handleSubmit = async () => {
+    if (!message.trim()) {
+      return;
+    }
+
+    // Add user message to chat log
+    const userMessage = message.trim();
+    setChatLog((prev) => [...prev, { role: "user", content: userMessage }]);
+    setMessage("");
+
+    try {
+      // Call the API route
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: userMessage }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get response");
+      }
+
+      const data = await response.json();
+      setChatLog((prev) => [...prev, { role: "bot", content: data.response }]);
+    } catch (error) {
+      console.error("Error:", error);
+      setChatLog((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          content: "I'm sorry, I encountered an error. Please try again later.",
+        },
+      ]);
+    }
+  };
 
 return (
     <>
@@ -66,6 +100,12 @@ return (
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onInput={handleInput}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void handleSubmit();
+              }
+            }}
             rows={1}
             placeholder="Ask about a species..."
             className="w-full resize-none overflow-hidden rounded border border-border bg-background p-2 text-sm text-foreground focus:outline-none"
@@ -73,9 +113,10 @@ return (
           <button
             type="button"
             onClick={() => void handleSubmit()}
-            className="mt-2 rounded bg-primary px-4 py-2 text-background transition hover:opacity-90"
+            disabled={!message.trim()}
+            className="mt-2 rounded bg-primary px-4 py-2 text-background transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Enter
+            Send
           </button>
         </div>
       </div>
