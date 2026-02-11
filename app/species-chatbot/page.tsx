@@ -4,6 +4,8 @@ import { TypographyH2, TypographyP } from "@/components/ui/typography";
 import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
+type ChatApiResponse = { response?: unknown };
+
 export default function SpeciesChatbot() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [message, setMessage] = useState("");
@@ -40,8 +42,12 @@ export default function SpeciesChatbot() {
         throw new Error("Failed to get response");
       }
 
-      const data = await response.json();
-      setChatLog((prev) => [...prev, { role: "bot", content: data.response }]);
+      const data = (await response.json()) as ChatApiResponse;
+
+      const botText =
+        typeof data.response === "string" ? data.response : "Sorry—bad response from server.";
+
+      setChatLog((prev) => [...prev, { role: "bot", content: botText }]);
     } catch (error) {
       console.error("Error:", error);
       setChatLog((prev) => [
