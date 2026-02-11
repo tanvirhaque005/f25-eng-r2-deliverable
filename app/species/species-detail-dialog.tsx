@@ -1,34 +1,34 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import type { Database } from "@/lib/schema";
 import Image from "next/image";
+import DeleteSpeciesButton from "./delete-species-button";
 import EditSpeciesDialog from "./edit-species-dialog";
-
-type Species = Database["public"]["Tables"]["species"]["Row"];
+import { type SpeciesWithAuthor } from "./types";
 
 interface SpeciesDetailDialogProps {
-  species: Species;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  userId?: string;
+  species: SpeciesWithAuthor;
+  trigger: React.ReactNode;
+  userId: string;
 }
 
-export default function SpeciesDetailDialog({ species, open, onOpenChange, userId }: SpeciesDetailDialogProps) {
+export default function SpeciesDetailDialog({ species, trigger, userId }: SpeciesDetailDialogProps) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-3xl">{species.scientific_name}</DialogTitle>
-          <DialogDescription className="text-lg italic">{species.common_name || "No common name"}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {species.image && (
@@ -39,32 +39,51 @@ export default function SpeciesDetailDialog({ species, open, onOpenChange, userI
           <Separator />
           <div className="grid gap-4 md:grid-cols-2">
             <div>
+              <h3 className="text-sm font-semibold uppercase text-muted-foreground">Scientific Name</h3>
+              <p className="text-lg">{species.scientific_name}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold uppercase text-muted-foreground">Common Name</h3>
+              <p className="text-lg">{species.common_name || "N/A"}</p>
+            </div>
+            <div>
               <h3 className="text-sm font-semibold uppercase text-muted-foreground">Kingdom</h3>
               <p className="text-lg">{species.kingdom}</p>
             </div>
-            {species.total_population !== null && (
-              <div>
-                <h3 className="text-sm font-semibold uppercase text-muted-foreground">Total Population</h3>
-                <p className="text-lg">{species.total_population.toLocaleString()}</p>
-              </div>
-            )}
+            <div>
+              <h3 className="text-sm font-semibold uppercase text-muted-foreground">Total Population</h3>
+              <p className="text-lg">{species.total_population?.toLocaleString() ?? "N/A"}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold uppercase text-muted-foreground">Endangered</h3>
+              <p className="text-lg">{species.endangered ? "Yes" : "No"}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold uppercase text-muted-foreground">Author</h3>
+              <p className="text-lg">{species.profiles?.display_name ?? "Unknown user"}</p>
+              <p className="text-sm text-muted-foreground">{species.profiles?.email ?? "No email available"}</p>
+            </div>
           </div>
-          {species.description && (
+          <Separator />
+          <div>
+            <h3 className="mb-2 text-sm font-semibold uppercase text-muted-foreground">Description</h3>
+            <p className="text-base leading-relaxed">{species.description || "N/A"}</p>
+          </div>
+          {species.author === userId && (
             <>
               <Separator />
-              <div>
-                <h3 className="mb-2 text-sm font-semibold uppercase text-muted-foreground">Description</h3>
-                <p className="text-base leading-relaxed">{species.description}</p>
+              <div className="flex justify-end gap-2">
+                <EditSpeciesDialog species={species} userId={userId} />
+                <DeleteSpeciesButton
+                  speciesId={species.id}
+                  speciesName={species.scientific_name}
+                  userId={userId}
+                  authorId={species.author}
+                  onDeleted={() => setOpen(false)}
+                />
               </div>
             </>
           )}
-          <Separator />
-          <div className="flex justify-end gap-2">
-            {userId && species.author === userId && <EditSpeciesDialog species={species} userId={userId} />}
-            <Button variant="secondary" onClick={() => onOpenChange(false)}>
-              Close
-            </Button>
-          </div>
         </div>
       </DialogContent>
     </Dialog>

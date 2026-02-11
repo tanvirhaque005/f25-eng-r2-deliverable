@@ -42,6 +42,7 @@ const speciesSchema = z.object({
     // Transform empty string or only whitespace input to null before form submission, and trim whitespace otherwise
     .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
   kingdom: kingdoms,
+  endangered: z.boolean(),
   total_population: z.number().int().positive().min(1).nullable(),
   image: z
     .string()
@@ -69,6 +70,7 @@ const defaultValues: Partial<FormData> = {
   scientific_name: "",
   common_name: null,
   kingdom: "Animalia",
+  endangered: false,
   total_population: null,
   image: null,
   description: null,
@@ -96,6 +98,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
         common_name: input.common_name,
         description: input.description,
         kingdom: input.kingdom,
+        endangered: input.endangered,
         scientific_name: input.scientific_name,
         total_population: input.total_population,
         image: input.image,
@@ -196,6 +199,32 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                               {kingdom}
                             </SelectItem>
                           ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="endangered"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endangered</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value === "true")}
+                      value={field.value ? "true" : "false"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select endangered status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="false">No</SelectItem>
+                          <SelectItem value="true">Yes</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>

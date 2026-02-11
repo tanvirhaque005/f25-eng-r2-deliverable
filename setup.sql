@@ -45,6 +45,7 @@ create table species (
   scientific_name text unique not null,
   common_name text,
   total_population int,
+  endangered boolean not null default false,
   kingdom kingdom not null,
   description text,
   image text,

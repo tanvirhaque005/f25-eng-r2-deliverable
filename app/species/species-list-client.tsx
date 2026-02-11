@@ -1,14 +1,12 @@
 "use client";
 
-import type { Database } from "@/lib/schema";
 import { useState, useMemo } from "react";
 import SpeciesCard from "./species-card";
 import SpeciesFilter from "./species-filter";
-
-type Species = Database["public"]["Tables"]["species"]["Row"];
+import { type SpeciesWithAuthor } from "./types";
 
 interface SpeciesListClientProps {
-  species: Species[];
+  species: SpeciesWithAuthor[];
   userId: string;
 }
 

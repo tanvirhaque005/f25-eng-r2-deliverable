@@ -4,23 +4,27 @@ import { createServerSupabaseClient } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
 import AddSpeciesDialog from "./add-species-dialog";
 import SpeciesListClient from "./species-list-client";
+import { type SpeciesWithAuthor } from "./types";
 
 export default async function SpeciesList() {
   // Create supabase server component client and obtain user session from stored cookie
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     // this is a protected route - only users who are signed in can view this route
     redirect("/");
   }
 
   // Obtain the ID of the currently signed-in user
-  const sessionId = session.user.id;
+  const sessionId = user.id;
 
-  const { data: species } = await supabase.from("species").select("*").order("id", { ascending: false });
+  const { data: species } = await supabase
+    .from("species")
+    .select("*, profiles:author(display_name, email)")
+    .order("id", { ascending: false });
 
   return (
     <>
@@ -29,7 +33,7 @@ export default async function SpeciesList() {
         <AddSpeciesDialog userId={sessionId} />
       </div>
       <Separator className="my-4" />
-      <SpeciesListClient species={species || []} userId={sessionId} />
+      <SpeciesListClient species={(species || []) as SpeciesWithAuthor[]} userId={sessionId} />
     </>
   );
 }

@@ -7,19 +7,43 @@ type Species = Database["public"]["Tables"]["species"]["Row"];
 export async function generateResponse(message: string): Promise<string> {
   const lowerMessage = message.toLowerCase().trim();
 
-  // Check if the message is about species
-  if (!lowerMessage.includes("species") && !lowerMessage.includes("animal") && !lowerMessage.includes("plant") && 
-      !lowerMessage.includes("fungi") && !lowerMessage.includes("kingdom") && !lowerMessage.includes("population") &&
-      !lowerMessage.includes("what") && !lowerMessage.includes("tell") && !lowerMessage.includes("about") &&
-      !lowerMessage.includes("how") && !lowerMessage.includes("which") && !lowerMessage.includes("list")) {
-    return "I'm a specialized chatbot for answering questions about species in the Biodiversity Hub database. Please ask me about animals, plants, fungi, or other species-related topics!";
-  }
-
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data: species, error } = await supabase.from("species").select("*");
 
   if (error || !species || species.length === 0) {
     return "I'm sorry, I couldn't retrieve species data from the database. Please try again later.";
+  }
+
+  const matchedSpecies = species.filter(
+    (s) =>
+      lowerMessage.includes(s.scientific_name.toLowerCase()) ||
+      (s.common_name && lowerMessage.includes(s.common_name.toLowerCase()))
+  );
+
+  if (lowerMessage.includes("compare") || lowerMessage.includes(" versus ") || lowerMessage.includes(" vs ")) {
+    if (matchedSpecies.length >= 2) {
+      const first = matchedSpecies[0];
+      const second = matchedSpecies[1];
+      if (!first || !second) {
+        return "I couldn't compare those species. Please try using exact species names from the database.";
+      }
+
+      return (
+        `**Comparison: ${first.scientific_name} vs ${second.scientific_name}**\n\n` +
+        `- **${first.scientific_name}** (${first.common_name ?? "N/A"})\n` +
+        `  - Kingdom: ${first.kingdom}\n` +
+        `  - Population: ${first.total_population?.toLocaleString() ?? "N/A"}\n` +
+        `- **${second.scientific_name}** (${second.common_name ?? "N/A"})\n` +
+        `  - Kingdom: ${second.kingdom}\n` +
+        `  - Population: ${second.total_population?.toLocaleString() ?? "N/A"}\n\n` +
+        "I can compare more fields if you ask for a specific metric (for example: population, kingdom, or description)."
+      );
+    }
+
+    return (
+      "I can compare species, but I couldn't find both species names in the current database. " +
+      "Try using exact names from your species list."
+    );
   }
 
   // Search for specific species by name

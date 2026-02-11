@@ -9,12 +9,12 @@ import AnimalSpeedGraph from "./animal-speed-graph";
 
 export default async function SpeciesSpeedPage() {
   // Create supabase server component client and obtain user session from stored cookie
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     // this is a protected route - only users who are signed in can view this route
     redirect("/");
   }

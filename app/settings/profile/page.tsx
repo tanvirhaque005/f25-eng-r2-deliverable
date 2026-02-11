@@ -13,17 +13,17 @@ function SettingsError({ message }: { message: string }) {
 }
 
 export default async function Settings() {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     // this is a protected route - only users who are signed in can view this route
     redirect("/");
   }
 
-  const { data, error } = await supabase.from("profiles").select().eq("id", session.user.id);
+  const { data, error } = await supabase.from("profiles").select().eq("id", user.id);
 
   if (error) {
     return <SettingsError message={error.message} />;

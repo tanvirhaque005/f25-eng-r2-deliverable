@@ -11,32 +11,31 @@ React server components don't track state between rerenders, so leaving the uniq
 can cause errors with matching props and state in child components if the list order changes.
 */
 import { Button } from "@/components/ui/button";
-import type { Database } from "@/lib/schema";
 import Image from "next/image";
-import { useState } from "react";
 import SpeciesDetailDialog from "./species-detail-dialog";
+import { type SpeciesWithAuthor } from "./types";
 
-type Species = Database["public"]["Tables"]["species"]["Row"];
-
-export default function SpeciesCard({ species, userId }: { species: Species; userId: string }) {
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-
+export default function SpeciesCard({ species, userId }: { species: SpeciesWithAuthor; userId: string }) {
   return (
-    <>
-      <div className="m-4 w-72 min-w-72 flex-none rounded border-2 p-3 shadow">
-        {species.image && (
-          <div className="relative h-40 w-full">
-            <Image src={species.image} alt={species.scientific_name} fill style={{ objectFit: "cover" }} />
-          </div>
-        )}
-        <h3 className="mt-3 text-2xl font-semibold">{species.scientific_name}</h3>
-        <h4 className="text-lg font-light italic">{species.common_name}</h4>
-        <p>{species.description ? species.description.slice(0, 150).trim() + "..." : ""}</p>
-        <Button className="mt-3 w-full" onClick={() => setIsDetailOpen(true)}>
-          Learn More
-        </Button>
-      </div>
-      <SpeciesDetailDialog species={species} open={isDetailOpen} onOpenChange={setIsDetailOpen} userId={userId} />
-    </>
+    <div className="m-4 w-72 min-w-72 flex-none rounded border-2 p-3 shadow">
+      {species.image && (
+        <div className="relative h-40 w-full">
+          <Image src={species.image} alt={species.scientific_name} fill style={{ objectFit: "cover" }} />
+        </div>
+      )}
+      <h3 className="mt-3 text-2xl font-semibold">{species.scientific_name}</h3>
+      <h4 className="text-lg font-light italic">{species.common_name}</h4>
+      <p className="text-xs text-muted-foreground">{species.endangered ? "Endangered" : "Not endangered"}</p>
+      <p>{species.description ? species.description.slice(0, 150).trim() + "..." : ""}</p>
+      <SpeciesDetailDialog
+        species={species}
+        userId={userId}
+        trigger={
+          <Button className="mt-3 w-full">
+            Learn more
+          </Button>
+        }
+      />
+    </div>
   );
 }
